@@ -13,17 +13,21 @@ concurrency:
 jobs:
   build-and-tests:
     uses: "./.github/workflows/build.yml"
+    secrets: inherit
 
   security:
     needs: build-and-tests
     permissions:
       security-events: write
     uses: "./.github/workflows/security.yml"
+    secrets: inherit
 
   docker:
     needs: security
     uses: "./.github/workflows/docker.yml"
+    secrets: inherit
 
   report:
     needs: docker
     uses: "./.github/workflows/report.yml"
+    secrets: inherit
