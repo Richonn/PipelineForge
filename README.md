@@ -1,6 +1,6 @@
 # PipelineForge
 
-> A DevSecOps reference pipeline — from commit to cluster, secured at every step.
+> A DevSecOps reference pipeline — from commit to cluster, secured at every stage.
 
 ![License](https://img.shields.io/github/license/Richonn/PipelineForge)
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
@@ -21,45 +21,45 @@ The project covers three application stacks (**Go, Python, Node.js**) and integr
 
 ```mermaid
 flowchart TD
-    DEV([👨‍💻 Developer]) -->|git commit| HOOK
+    DEV([Developer]) -->|git commit| HOOK
 
-    subgraph LOCAL["🖥️ Local workstation"]
+    subgraph LOCAL["Local workstation"]
         HOOK[Pre-commit Hook\nGitleaks - secrets\nLint]
     end
 
     HOOK -->|git push| PR
 
-    subgraph GITHUB["☁️ GitHub"]
+    subgraph GITHUB["GitHub"]
         PR[Pull Request] --> CI
 
-        subgraph CI["🔄 CI Pipeline — GitHub Actions"]
+        subgraph CI["CI Pipeline — GitHub Actions"]
             direction TB
-            S1[① Build & Test\nCompile + unit tests]
-            S2[② SAST\nSemgrep + CodeQL]
-            S3[③ Secrets Scan\nGitleaks]
-            S4[④ SCA\nTrivy dependencies]
-            S5[⑤ Docker Build\nMulti-stage]
-            S6[⑥ Image Scan\nTrivy image]
-            S7[⑦ IaC Scan\nCheckov]
-            S8[⑧ DAST\nOWASP ZAP baseline]
-            S9[⑨ Security Report\nSARIF → GitHub Security Tab]
+            S1[1. Build and Test\nCompile + unit tests]
+            S2[2. SAST\nSemgrep + CodeQL]
+            S3[3. Secrets Scan\nGitleaks]
+            S4[4. SCA\nTrivy dependencies]
+            S5[5. Docker Build\nMulti-stage]
+            S6[6. Image Scan\nTrivy image]
+            S7[7. IaC Scan\nCheckov]
+            S8[8. DAST\nOWASP ZAP baseline]
+            S9[9. Security Report\nSARIF to GitHub Security Tab]
 
             S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9
         end
 
-        S9 -->|merge if ✅| MAIN[Main branch]
+        S9 -->|merge on pass| MAIN[Main branch]
         MAIN --> REGISTRY[Container Registry\nGHCR]
     end
 
     REGISTRY -->|GitOps pull| CD
 
-    subgraph CD["🚀 CD — Deployment"]
+    subgraph CD["CD — Deployment"]
         ARGOCD[ArgoCD\nGitOps sync]
         ARGOCD --> STAGING[Staging]
         STAGING -->|manual approval| PROD[Production]
     end
 
-    subgraph RUNTIME["🛡️ Runtime — KubeForge"]
+    subgraph RUNTIME["Runtime — KubeForge"]
         RBAC[RBAC\nleast privilege]
         SEALED[Sealed Secrets\nencrypted at rest]
         TRIVY_OP[Trivy Operator\ncontinuous scanning]
@@ -94,10 +94,10 @@ flowchart TD
 
 | Level | Action |
 |---|---|
-| 🔴 Critical | Blocks merge — fix required |
-| 🟠 High | Blocks merge — fix or documented exception required |
-| 🟡 Medium | Warning on PR — does not block |
-| ⚪ Low / Info | Visible in dashboard, ignored in CI |
+| Critical | Blocks merge — fix required |
+| High | Blocks merge — fix or documented exception required |
+| Medium | Warning on PR — does not block |
+| Low / Info | Visible in dashboard, ignored in CI |
 
 ---
 
@@ -105,23 +105,24 @@ flowchart TD
 
 ```
 PipelineForge/
-├── ARCHITECTURE.md          # Pipeline diagram and breakdown of all 9 stages
+├── ARCHITECTURE.md          # Pipeline diagram and breakdown of all stages
 ├── THREAT_MODEL.md          # STRIDE threat analysis of the CI/CD chain itself
 ├── TOOL_CHOICES.md          # Justification of each tool vs. alternatives
 ├── DEVSECOPS_REFERENCE.md   # Full guide: Shift Left, SAST/DAST/SCA, false positives
 │
 ├── apps/
 │   ├── go-app/              # Go REST API — intentional vulnerabilities for demo
-│   ├── python-app/          # Python API (FastAPI) — same
-│   └── node-app/            # Node.js API (Express) — same
+│   ├── python-app/          # Python API (FastAPI)
+│   └── node-app/            # Node.js API (Express)
 │
 └── .github/
     └── workflows/
-        ├── ci.yml           # Main CI pipeline (all security scans)
-        └── ...
+        ├── ci.yml           # Orchestrator — chains all reusable workflows
+        ├── build.yml        # Build and unit tests
+        ├── security.yml     # Gitleaks, Semgrep, CodeQL, Trivy SCA
+        ├── docker.yml       # Docker build, Trivy image scan, Checkov
+        └── report.yml       # Job summary
 ```
-
-> `apps/` and `.github/workflows/` are under active development (Phase 2–3).
 
 ---
 
@@ -137,7 +138,7 @@ The CI/CD chain itself is a critical attack surface: it has access to secrets, t
 - Kubernetes cluster (runtime)
 - Supply chain (third-party dependencies)
 
-> *References: Codecov incident 2021, tj-actions incident 2025, CERT-Wavestone report 2025.*
+> References: Codecov incident 2021, tj-actions incident 2025, CERT-Wavestone report 2025.
 
 ---
 

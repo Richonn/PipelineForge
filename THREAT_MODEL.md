@@ -4,7 +4,7 @@
 
 This document applies the **STRIDE** methodology to the CI/CD chain itself — not to the application it deploys. A compromised delivery pipeline is a critical attack vector: it has access to secrets, the container registry, and the production cluster.
 
-> *Source: the CERT 2025 report on cybersecurity explicitly cites CI/CD compromise as a privilege escalation vector, alongside ADCS and hypervisor tooling.*
+> Source: the CERT 2025 report on cybersecurity explicitly cites CI/CD compromise as a privilege escalation vector, alongside ADCS and hypervisor tooling.
 
 ### STRIDE Categories
 
@@ -22,8 +22,8 @@ This document applies the **STRIDE** methodology to the CI/CD chain itself — n
 ## Scope
 
 ```
-[Developer workstation] → [GitHub repository] → [GitHub Actions runners]
-→ [Container Registry] → [ArgoCD] → [Production K8s cluster]
+[Developer workstation] -> [GitHub repository] -> [GitHub Actions runners]
+-> [Container Registry] -> [ArgoCD] -> [Production K8s cluster]
 ```
 
 Each component is a potential attack surface.
@@ -36,10 +36,10 @@ Each component is a potential attack surface.
 
 | ID | STRIDE | Threat | Severity |
 |---|---|---|---|
-| DEV-01 | I | Hardcoded secret in source code (API key, token, password) | 🔴 Critical |
-| DEV-02 | T | Compromised dependency installed locally (npm/pip/go typosquatting) | 🔴 Critical |
-| DEV-03 | S | Git identity spoofing (commit with a forged author) | 🟡 Medium |
-| DEV-04 | T | Pre-commit hook disabled or intentionally bypassed | 🟡 Medium |
+| DEV-01 | I | Hardcoded secret in source code (API key, token, password) | Critical |
+| DEV-02 | T | Compromised dependency installed locally (npm/pip/go typosquatting) | Critical |
+| DEV-03 | S | Git identity spoofing (commit with a forged author) | Medium |
+| DEV-04 | T | Pre-commit hook disabled or intentionally bypassed | Medium |
 
 ### Mitigations
 
@@ -58,12 +58,12 @@ Each component is a potential attack surface.
 
 | ID | STRIDE | Threat | Severity |
 |---|---|---|---|
-| REPO-01 | T | Direct push to `main` without review (CI bypass) | 🔴 Critical |
-| REPO-02 | E | Overly permissive GitHub access for contributors | 🔴 Critical |
-| REPO-03 | T | Malicious modification of a CI workflow file (`.github/workflows/`) | 🔴 Critical |
-| REPO-04 | I | Secret exposure in GitHub Actions logs | 🔴 Critical |
-| REPO-05 | T | Supply chain attack via a compromised GitHub Action (`uses: author/action@v1`) | 🔴 Critical |
-| REPO-06 | R | No traceability on merges and deployments | 🟠 High |
+| REPO-01 | T | Direct push to `main` without review (CI bypass) | Critical |
+| REPO-02 | E | Overly permissive GitHub access for contributors | Critical |
+| REPO-03 | T | Malicious modification of a CI workflow file (`.github/workflows/`) | Critical |
+| REPO-04 | I | Secret exposure in GitHub Actions logs | Critical |
+| REPO-05 | T | Supply chain attack via a compromised GitHub Action (`uses: author/action@v1`) | Critical |
+| REPO-06 | R | No traceability on merges and deployments | High |
 
 ### Mitigations
 
@@ -76,7 +76,7 @@ Each component is a potential attack surface.
 | REPO-05 | Pin actions by commit SHA | `uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29` |
 | REPO-06 | GitHub Audit Log enabled + alerts on sensitive actions | GitHub Audit Log |
 
-> ⚠️ **REPO-05 is critical**: a GitHub Action referenced by tag (`@v3`) can be modified at any time by its author. SHA pinning guarantees immutability. See: Codecov incident 2021, tj-actions incident 2025.
+> **REPO-05 is critical**: a GitHub Action referenced by tag (`@v3`) can be modified at any time by its author. SHA pinning guarantees immutability. See: Codecov incident 2021, tj-actions incident 2025.
 
 ---
 
@@ -86,11 +86,11 @@ Each component is a potential attack surface.
 
 | ID | STRIDE | Threat | Severity |
 |---|---|---|---|
-| RUNNER-01 | E | CI secret exfiltration from the runner (env variables, temp files) | 🔴 Critical |
-| RUNNER-02 | T | Command injection via workflow inputs (script injection) | 🔴 Critical |
-| RUNNER-03 | T | Persistent compromised runner between jobs (self-hosted runner) | 🔴 Critical |
-| RUNNER-04 | D | Abusive CI minute consumption (DoS on the pipeline) | 🟡 Medium |
-| RUNNER-05 | I | Access to secrets from other repositories via a shared runner | 🟠 High |
+| RUNNER-01 | E | CI secret exfiltration from the runner (env variables, temp files) | Critical |
+| RUNNER-02 | T | Command injection via workflow inputs (script injection) | Critical |
+| RUNNER-03 | T | Persistent compromised runner between jobs (self-hosted runner) | Critical |
+| RUNNER-04 | D | Abusive CI minute consumption (DoS on the pipeline) | Medium |
+| RUNNER-05 | I | Access to secrets from other repositories via a shared runner | High |
 
 ### Mitigations
 
@@ -102,16 +102,16 @@ Each component is a potential attack surface.
 | RUNNER-04 | Job timeout + concurrency limit | `timeout-minutes` + `concurrency` in workflow |
 | RUNNER-05 | Isolate self-hosted runners per project if used | Runner groups |
 
-> ℹ️ **RUNNER-02 concrete example**:
-> ```yaml
-> # ❌ Dangerous — injection possible if PR title contains backticks
-> - run: echo "Title: ${{ github.event.pull_request.title }}"
->
-> # ✅ Safe — passed through environment variable
-> - env:
->     PR_TITLE: ${{ github.event.pull_request.title }}
->   run: echo "Title: $PR_TITLE"
-> ```
+**RUNNER-02 concrete example**:
+```yaml
+# Dangerous — injection possible if PR title contains backticks
+- run: echo "Title: ${{ github.event.pull_request.title }}"
+
+# Safe — passed through environment variable
+- env:
+    PR_TITLE: ${{ github.event.pull_request.title }}
+  run: echo "Title: $PR_TITLE"
+```
 
 ---
 
@@ -121,10 +121,10 @@ Each component is a potential attack surface.
 
 | ID | STRIDE | Threat | Severity |
 |---|---|---|---|
-| REG-01 | T | Malicious image pushed to the registry | 🔴 Critical |
-| REG-02 | I | Public registry exposing images containing secrets | 🔴 Critical |
-| REG-03 | T | Overwriting an existing tag (`latest`) with a compromised image | 🔴 Critical |
-| REG-04 | S | Image spoofing via name collision (image pull without digest) | 🟠 High |
+| REG-01 | T | Malicious image pushed to the registry | Critical |
+| REG-02 | I | Public registry exposing images containing secrets | Critical |
+| REG-03 | T | Overwriting an existing tag (`latest`) with a compromised image | Critical |
+| REG-04 | S | Image spoofing via name collision (image pull without digest) | High |
 
 ### Mitigations
 
@@ -143,10 +143,10 @@ Each component is a potential attack surface.
 
 | ID | STRIDE | Threat | Severity |
 |---|---|---|---|
-| ARGO-01 | E | Unauthorized access to the ArgoCD UI or API | 🔴 Critical |
-| ARGO-02 | T | Direct K8s manifest modification bypassing Git | 🟠 High |
-| ARGO-03 | I | Kubernetes secrets in plaintext in the config repository | 🔴 Critical |
-| ARGO-04 | E | ArgoCD with unnecessarily broad cluster-admin rights | 🟠 High |
+| ARGO-01 | E | Unauthorized access to the ArgoCD UI or API | Critical |
+| ARGO-02 | T | Direct K8s manifest modification bypassing Git | High |
+| ARGO-03 | I | Kubernetes secrets in plaintext in the config repository | Critical |
+| ARGO-04 | E | ArgoCD with unnecessarily broad cluster-admin rights | High |
 
 ### Mitigations
 
@@ -165,11 +165,11 @@ Each component is a potential attack surface.
 
 | ID | STRIDE | Threat | Severity |
 |---|---|---|---|
-| K8S-01 | E | Container running as root with node access | 🔴 Critical |
-| K8S-02 | E | Container escape via misconfiguration (hostPID, hostNetwork, privileged) | 🔴 Critical |
-| K8S-03 | T | Image with new CVEs published post-deployment | 🟠 High |
-| K8S-04 | I | Kubernetes secret accessible by all pods in the namespace | 🟠 High |
-| K8S-05 | D | Missing limits/requests → resource starvation | 🟡 Medium |
+| K8S-01 | E | Container running as root with node access | Critical |
+| K8S-02 | E | Container escape via misconfiguration (hostPID, hostNetwork, privileged) | Critical |
+| K8S-03 | T | Image with new CVEs published post-deployment | High |
+| K8S-04 | I | Kubernetes secret accessible by all pods in the namespace | High |
+| K8S-05 | D | Missing limits/requests leading to resource starvation | Medium |
 
 ### Mitigations
 
@@ -189,11 +189,11 @@ Each component is a potential attack surface.
 
 | ID | STRIDE | Threat | Severity |
 |---|---|---|---|
-| SC-01 | T | npm/pip/go dependency compromised by an attacker (typosquatting, hijacking) | 🔴 Critical |
-| SC-02 | T | Automatic dependency update introducing a vulnerability | 🟠 High |
-| SC-03 | T | Malicious package published by a compromised maintainer | 🔴 Critical |
+| SC-01 | T | npm/pip/go dependency compromised by an attacker (typosquatting, hijacking) | Critical |
+| SC-02 | T | Automatic dependency update introducing a vulnerability | High |
+| SC-03 | T | Malicious package published by a compromised maintainer | Critical |
 
-> *Source: CERT-Wavestone 2025 report — the Shai-Hulud worm compromised over 500 npm packages by stealing maintainer tokens and injecting malicious code.*
+> Source: CERT-Wavestone 2025 report — the Shai-Hulud worm compromised over 500 npm packages by stealing maintainer tokens and injecting malicious code.
 
 ### Mitigations
 
@@ -207,7 +207,8 @@ Each component is a potential attack surface.
 
 ## Risk Summary by Severity
 
-### 🔴 Critical (immediate fix)
+### Critical (immediate fix required)
+
 - Hardcoded secrets in code (DEV-01)
 - Direct push to main without CI (REPO-01)
 - GitHub Actions not pinned by SHA (REPO-05)
@@ -216,14 +217,16 @@ Each component is a potential attack surface.
 - Kubernetes secrets in plaintext in Git (ARGO-03)
 - Containers running as root (K8S-01)
 
-### 🟠 High (planned fix)
+### High (planned fix)
+
 - Overpermissive GitHub access (REPO-02)
 - Secret exfiltration from CI runner (RUNNER-01)
 - Registry tag overwriting (REG-03)
 - ArgoCD overly broad permissions (ARGO-04)
 - Post-deployment CVEs (K8S-03)
 
-### 🟡 Medium (continuous improvement)
+### Medium (continuous improvement)
+
 - Bypassable pre-commit hook (DEV-04)
 - DoS on the CI pipeline (RUNNER-04)
 - Missing K8s resource limits (K8S-05)

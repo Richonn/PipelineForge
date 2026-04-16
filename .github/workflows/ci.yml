@@ -33,6 +33,7 @@ jobs:
       contents: read
       security-events: write
       packages: write
+      pull-requests: write
     uses: "./.github/workflows/docker.yml"
     secrets: inherit
 

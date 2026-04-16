@@ -6,45 +6,45 @@ This repository models a secure, agile software delivery pipeline covering the f
 
 ```mermaid
 flowchart TD
-    DEV([👨‍💻 Developer]) -->|git commit| HOOK
+    DEV([Developer]) -->|git commit| HOOK
 
-    subgraph LOCAL["🖥️ Local workstation"]
+    subgraph LOCAL["Local workstation"]
         HOOK[Pre-commit Hook\nGitleaks - secrets\nLint]
     end
 
     HOOK -->|git push| PR
 
-    subgraph GITHUB["☁️ GitHub"]
+    subgraph GITHUB["GitHub"]
         PR[Pull Request] --> CI
 
-        subgraph CI["🔄 CI Pipeline — GitHub Actions"]
+        subgraph CI["CI Pipeline — GitHub Actions"]
             direction TB
-            S1[① Build & Test\nCompile + unit tests]
-            S2[② SAST\nSemgrep + CodeQL]
-            S3[③ Secrets Scan\nGitleaks]
-            S4[④ SCA\nTrivy dependencies]
-            S5[⑤ Docker Build\nMulti-stage]
-            S6[⑥ Image Scan\nTrivy image]
-            S7[⑦ IaC Scan\nCheckov]
-            S8[⑧ DAST\nOWASP ZAP baseline]
-            S9[⑨ Security Report\nSARIF → GitHub Security Tab]
+            S1[1. Build and Test\nCompile + unit tests]
+            S2[2. SAST\nSemgrep + CodeQL]
+            S3[3. Secrets Scan\nGitleaks]
+            S4[4. SCA\nTrivy dependencies]
+            S5[5. Docker Build\nMulti-stage]
+            S6[6. Image Scan\nTrivy image]
+            S7[7. IaC Scan\nCheckov]
+            S8[8. DAST\nOWASP ZAP baseline]
+            S9[9. Security Report\nSARIF to GitHub Security Tab]
 
             S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9
         end
 
-        S9 -->|merge if ✅| MAIN[Main branch]
+        S9 -->|merge on pass| MAIN[Main branch]
         MAIN --> REGISTRY[Container Registry\nGHCR]
     end
 
     REGISTRY -->|GitOps pull| CD
 
-    subgraph CD["🚀 CD — Deployment"]
+    subgraph CD["CD — Deployment"]
         ARGOCD[ArgoCD\nGitOps sync]
         ARGOCD --> STAGING[Staging]
         STAGING -->|manual approval| PROD[Production]
     end
 
-    subgraph RUNTIME["🛡️ Runtime — KubeForge"]
+    subgraph RUNTIME["Runtime — KubeForge"]
         RBAC[RBAC\nleast privilege]
         SEALED[Sealed Secrets\nencrypted at rest]
         TRIVY_OP[Trivy Operator\ncontinuous scanning]
@@ -58,7 +58,7 @@ flowchart TD
 
 ## Stage Breakdown
 
-### ① Local workstation — Pre-commit
+### 1. Local workstation — Pre-commit
 
 | Tool | Role | Trigger |
 |---|---|---|
@@ -69,7 +69,7 @@ flowchart TD
 
 ---
 
-### ② CI — Static Application Security Testing (SAST)
+### 2. CI — Static Application Security Testing (SAST)
 
 | Tool | Stacks | What it detects |
 |---|---|---|
@@ -80,31 +80,31 @@ flowchart TD
 
 ---
 
-### ③ CI — Software Composition Analysis (SCA)
+### 3. CI — Software Composition Analysis (SCA)
 
 | Tool | What it analyzes | CVE database |
 |---|---|---|
 | Trivy (dependencies) | go.sum, requirements.txt, package-lock.json | NVD, OSV, GitHub Advisory |
 | Dependabot | Automated dependency updates | GitHub Advisory |
 
-**Thresholds**: CVE CVSS ≥ 7.0 (High) blocks the merge.
+**Thresholds**: CVE CVSS >= 7.0 (High) blocks the merge.
 
 ---
 
-### ④ CI — Docker Build (multi-stage)
+### 4. CI — Docker Build (multi-stage)
 
 Each application follows the multi-stage pattern:
 
 ```
 Stage 1 — Builder  : full image with build tools
 Stage 2 — Runtime  : minimal image (distroless or alpine)
-                     → reduced attack surface
-                     → no shell, no package manager
+                     - reduced attack surface
+                     - no shell, no package manager
 ```
 
 ---
 
-### ⑤ CI — Docker Image Scan
+### 5. CI — Docker Image Scan
 
 | Tool | What it analyzes |
 |---|---|
@@ -113,7 +113,7 @@ Stage 2 — Runtime  : minimal image (distroless or alpine)
 
 ---
 
-### ⑥ CI — Infrastructure as Code Scan
+### 6. CI — Infrastructure as Code Scan
 
 | Tool | What it analyzes |
 |---|---|
@@ -122,7 +122,7 @@ Stage 2 — Runtime  : minimal image (distroless or alpine)
 
 ---
 
-### ⑦ CI — Dynamic Application Security Testing (DAST)
+### 7. CI — Dynamic Application Security Testing (DAST)
 
 | Tool | Mode | Environment |
 |---|---|---|
@@ -134,20 +134,20 @@ DAST runs against a staging environment spun up temporarily during CI. It tests 
 
 ---
 
-### ⑧ CD — GitOps with ArgoCD
+### 8. CD — GitOps with ArgoCD
 
 The `main` branch does not trigger a direct deployment. ArgoCD watches the configuration repository (K8s manifests) and synchronizes the cluster state with the declared state in Git.
 
 ```
-Code repo (this repo)  →  build image  →  GHCR registry
-Config repo            →  ArgoCD sync  →  K8s cluster
+Code repo (this repo)  ->  build image  ->  GHCR registry
+Config repo            ->  ArgoCD sync  ->  K8s cluster
 ```
 
 **Security advantage**: the cluster only pulls from the registry — it never has direct access to the source code.
 
 ---
 
-### ⑨ Runtime — KubeForge
+### 9. Runtime — KubeForge
 
 The runtime layer relies on [KubeForge](https://github.com/Richonn/KubeForge), which provides:
 
