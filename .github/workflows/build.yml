@@ -5,6 +5,8 @@ on:
 
 jobs:
   build-and-tests:
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: apps/go-app
