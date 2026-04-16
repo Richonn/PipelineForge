@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-tests:
+    permissions:
+      contents: read
+    uses: "./.github/workflows/build.yml"
+    secrets: inherit
+
+  security:
+    needs: build-and-tests
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+      pull-requests: write
+    uses: "./.github/workflows/security.yml"
+    secrets: inherit
+
+  docker:
+    needs: security
+    permissions:
+      contents: read
+      security-events: write
+      packages: write
+      pull-requests: write
+    uses: "./.github/workflows/docker.yml"
+    secrets: inherit
+
+  report:
+    needs: docker
+    permissions:
+      contents: read
+    uses: "./.github/workflows/report.yml"
+    secrets: inherit

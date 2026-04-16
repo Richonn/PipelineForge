@@ -1,54 +1,54 @@
 # Architecture — DevSecOps Reference Pipeline
 
-## Vue d'ensemble
+## Overview
 
-Ce dépôt modélise une chaîne de production applicative sécurisée et agile, couvrant l'intégralité du cycle de vie logiciel : du commit du développeur au déploiement en production. Chaque étape intègre des contrôles de sécurité automatisés, sans bloquer le flux de livraison agile.
+This repository models a secure, agile software delivery pipeline covering the full application lifecycle: from developer commit to production deployment. Each stage integrates automated security controls without blocking the agile delivery flow.
 
 ```mermaid
 flowchart TD
-    DEV([👨‍💻 Développeur]) -->|git commit| HOOK
+    DEV([Developer]) -->|git commit| HOOK
 
-    subgraph LOCAL["🖥️ Poste local"]
+    subgraph LOCAL["Local workstation"]
         HOOK[Pre-commit Hook\nGitleaks - secrets\nLint]
     end
 
     HOOK -->|git push| PR
 
-    subgraph GITHUB["☁️ GitHub"]
+    subgraph GITHUB["GitHub"]
         PR[Pull Request] --> CI
 
-        subgraph CI["🔄 Pipeline CI — GitHub Actions"]
+        subgraph CI["CI Pipeline — GitHub Actions"]
             direction TB
-            S1[① Build & Test\nCompilation + tests unitaires]
-            S2[② SAST\nSemgrep + CodeQL]
-            S3[③ Secrets Scan\nGitleaks]
-            S4[④ SCA\nTrivy dépendances]
-            S5[⑤ Docker Build\nMulti-stage]
-            S6[⑥ Image Scan\nTrivy image]
-            S7[⑦ IaC Scan\nCheckov]
-            S8[⑧ DAST\nOWASP ZAP baseline]
-            S9[⑨ Security Report\nSARIF → GitHub Security Tab]
+            S1[1. Build and Test\nCompile + unit tests]
+            S2[2. SAST\nSemgrep + CodeQL]
+            S3[3. Secrets Scan\nGitleaks]
+            S4[4. SCA\nTrivy dependencies]
+            S5[5. Docker Build\nMulti-stage]
+            S6[6. Image Scan\nTrivy image]
+            S7[7. IaC Scan\nCheckov]
+            S8[8. DAST\nOWASP ZAP baseline]
+            S9[9. Security Report\nSARIF to GitHub Security Tab]
 
             S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9
         end
 
-        S9 -->|merge si ✅| MAIN[Branche main]
+        S9 -->|merge on pass| MAIN[Main branch]
         MAIN --> REGISTRY[Container Registry\nGHCR]
     end
 
     REGISTRY -->|GitOps pull| CD
 
-    subgraph CD["🚀 CD — Déploiement"]
+    subgraph CD["CD — Deployment"]
         ARGOCD[ArgoCD\nGitOps sync]
         ARGOCD --> STAGING[Staging]
-        STAGING -->|validation manuelle| PROD[Production]
+        STAGING -->|manual approval| PROD[Production]
     end
 
-    subgraph RUNTIME["🛡️ Runtime — KubeForge"]
-        RBAC[RBAC\nmoindre privilège]
-        SEALED[Sealed Secrets\nchiffrement des secrets]
-        TRIVY_OP[Trivy Operator\nscan continu]
-        PROM[Prometheus + Grafana\nobservabilité]
+    subgraph RUNTIME["Runtime — KubeForge"]
+        RBAC[RBAC\nleast privilege]
+        SEALED[Sealed Secrets\nencrypted at rest]
+        TRIVY_OP[Trivy Operator\ncontinuous scanning]
+        PROM[Prometheus + Grafana\nobservability]
     end
 
     PROD --> RUNTIME
@@ -56,127 +56,127 @@ flowchart TD
 
 ---
 
-## Détail des étapes
+## Stage Breakdown
 
-### ① Poste local — Pre-commit
+### 1. Local workstation — Pre-commit
 
-| Outil | Rôle | Déclencheur |
+| Tool | Role | Trigger |
 |---|---|---|
-| Gitleaks | Détection de secrets dans le code (clés API, tokens...) | `git commit` |
-| Linter (golangci-lint / flake8 / eslint) | Qualité du code par stack | `git commit` |
+| Gitleaks | Detect secrets in code (API keys, tokens...) | `git commit` |
+| Linter (golangci-lint / flake8 / eslint) | Code quality per stack | `git commit` |
 
-**Pourquoi en local ?** Bloquer au plus tôt (Shift Left). Un secret détecté avant le push ne nécessite pas de rotation de credentials.
+**Why locally?** Shift Left — block issues as early as possible. A secret caught before the push does not require credential rotation.
 
 ---
 
-### ② CI — Static Analysis Security Testing (SAST)
+### 2. CI — Static Application Security Testing (SAST)
 
-| Outil | Stacks couvertes | Ce qu'il détecte |
+| Tool | Stacks | What it detects |
 |---|---|---|
-| Semgrep | Go, Python, Node.js | Injections, mauvaises pratiques sécu, patterns dangereux |
-| CodeQL | Go, JavaScript | Vulnérabilités complexes, flux de données non sécurisés |
+| Semgrep | Go, Python, Node.js | Injections, unsafe patterns, dangerous practices |
+| CodeQL | Go, JavaScript | Complex vulnerabilities, unsafe data flows |
 
-**Seuils** : Critical et High bloquent le merge. Medium génère un warning dans la PR.
+**Thresholds**: Critical and High block the merge. Medium generates a warning on the PR.
 
 ---
 
-### ③ CI — Software Composition Analysis (SCA)
+### 3. CI — Software Composition Analysis (SCA)
 
-| Outil | Ce qu'il analyse | Base de données CVE |
+| Tool | What it analyzes | CVE database |
 |---|---|---|
-| Trivy (dépendances) | go.sum, requirements.txt, package-lock.json | NVD, OSV, GitHub Advisory |
-| Dependabot | Mises à jour automatiques des dépendances | GitHub Advisory |
+| Trivy (dependencies) | go.sum, requirements.txt, package-lock.json | NVD, OSV, GitHub Advisory |
+| Dependabot | Automated dependency updates | GitHub Advisory |
 
-**Seuils** : CVE CVSS ≥ 7.0 (High) bloque le merge.
+**Thresholds**: CVE CVSS >= 7.0 (High) blocks the merge.
 
 ---
 
-### ④ CI — Build Docker (multi-stage)
+### 4. CI — Docker Build (multi-stage)
 
-Chaque application suit le pattern multi-stage :
+Each application follows the multi-stage pattern:
 
 ```
-Stage 1 — Builder  : image complète avec outils de build
-Stage 2 — Runtime  : image minimale (distroless ou alpine)
-                     → surface d'attaque réduite
-                     → pas de shell, pas de package manager
+Stage 1 — Builder  : full image with build tools
+Stage 2 — Runtime  : minimal image (distroless or alpine)
+                     - reduced attack surface
+                     - no shell, no package manager
 ```
 
 ---
 
-### ⑤ CI — Scan d'image Docker
+### 5. CI — Docker Image Scan
 
-| Outil | Ce qu'il analyse |
+| Tool | What it analyzes |
 |---|---|
-| Trivy (image) | CVE dans l'OS de base, les packages système, les layers |
-| Checkov | Mauvaises pratiques dans le Dockerfile (USER root, COPY *, etc.) |
+| Trivy (image) | CVE in the base OS, system packages, and layers |
+| Checkov | Dockerfile bad practices (USER root, COPY *, etc.) |
 
 ---
 
-### ⑥ CI — Infrastructure as Code Scan
+### 6. CI — Infrastructure as Code Scan
 
-| Outil | Ce qu'il analyse |
+| Tool | What it analyzes |
 |---|---|
-| Checkov | Manifests Kubernetes (RBAC trop permissif, capabilities, hostNetwork...) |
+| Checkov | Kubernetes manifests (overpermissive RBAC, capabilities, hostNetwork...) |
 | Checkov | Dockerfiles |
 
 ---
 
-### ⑦ CI — Dynamic Analysis Security Testing (DAST)
+### 7. CI — Dynamic Application Security Testing (DAST)
 
-| Outil | Mode | Environnement |
+| Tool | Mode | Environment |
 |---|---|---|
-| OWASP ZAP | Baseline scan | Staging éphémère |
+| OWASP ZAP | Baseline scan | Ephemeral staging |
 
-Le DAST est lancé sur un environnement de staging déployé temporairement pendant la CI. Il teste l'application en cours d'exécution (headers HTTP, XSS, injections basiques).
+DAST runs against a staging environment spun up temporarily during CI. It tests the running application (HTTP headers, XSS, basic injections).
 
-**Limite** : le baseline scan ZAP est superficiel — il couvre les vulnérabilités les plus communes, pas un pentest complet. C'est un filet de sécurité, pas une garantie.
+**Limitation**: the ZAP baseline scan is shallow — it covers the most common vulnerabilities, not a full pentest. It is a safety net, not a guarantee.
 
 ---
 
-### ⑧ CD — GitOps avec ArgoCD
+### 8. CD — GitOps with ArgoCD
 
-La branche `main` ne déclenche pas de déploiement direct. ArgoCD surveille le dépôt de configuration (manifests K8s) et synchronise l'état du cluster avec l'état déclaré dans Git.
+The `main` branch does not trigger a direct deployment. ArgoCD watches the configuration repository (K8s manifests) and synchronizes the cluster state with the declared state in Git.
 
 ```
-Code repo (ce dépôt)  →  build image  →  registry GHCR
-Config repo           →  ArgoCD sync  →  cluster K8s
+Code repo (this repo)  ->  build image  ->  GHCR registry
+Config repo            ->  ArgoCD sync  ->  K8s cluster
 ```
 
-**Avantage sécu** : le cluster ne pull que depuis le registry — il n'a jamais accès direct au code source.
+**Security advantage**: the cluster only pulls from the registry — it never has direct access to the source code.
 
 ---
 
-### ⑨ Runtime — KubeForge
+### 9. Runtime — KubeForge
 
-Le runtime s'appuie sur [KubeForge](https://github.com/Richonn/KubeForge) qui fournit :
+The runtime layer relies on [KubeForge](https://github.com/Richonn/KubeForge), which provides:
 
-- **RBAC** : moindre privilège par namespace et par service account
-- **Sealed Secrets** : chiffrement des secrets Kubernetes au repos
-- **Trivy Operator** : scan continu des images déployées (détecte les nouvelles CVE post-déploiement)
-- **Prometheus + Grafana** : observabilité et alerting
+- **RBAC**: least privilege per namespace and per service account
+- **Sealed Secrets**: Kubernetes secrets encrypted at rest in Git
+- **Trivy Operator**: continuous scanning of deployed images (detects new CVEs post-deployment)
+- **Prometheus + Grafana**: observability and alerting
 
 ---
 
-## Gestion des faux positifs
+## False Positive Management
 
-Un pipeline trop bruyant sera ignoré ou contourné par les équipes. La stratégie :
+An overly noisy pipeline will be ignored or bypassed by teams. The strategy:
 
-| Niveau | Action |
+| Level | Action |
 |---|---|
-| Critical | Bloque le merge — correction obligatoire |
-| High | Bloque le merge — correction obligatoire ou exception documentée |
-| Medium | Warning dans la PR — ne bloque pas |
-| Low / Info | Ignoré en CI, visible dans le dashboard |
+| Critical | Blocks merge — fix required |
+| High | Blocks merge — fix required or documented exception |
+| Medium | Warning on PR — does not block |
+| Low / Info | Ignored in CI, visible in the dashboard |
 
-Les exceptions (faux positifs confirmés) sont documentées dans un fichier `.semgrepignore` / `.trivyignore` avec justification obligatoire.
+Exceptions (confirmed false positives) are documented in `.semgrepignore` / `.trivyignore` with a mandatory justification.
 
 ---
 
-## Lien avec les projets existants
+## Related Projects
 
-| Projet | Couverture |
+| Project | Coverage |
 |---|---|
-| **ShieldCI** | Génération automatique de pipelines CI sécurisés — ce projet est la version référence documentée de ce que ShieldCI automatise |
-| **KubeForge** | Runtime Kubernetes sécurisé — branché en CD de ce pipeline |
-| **DevSecOps Reference Pipeline** | Chaîne complète du commit au cluster, documentée et justifiée |
+| **ShieldCI** | Automated generation of secure CI pipelines — this project is the manually documented reference version of what ShieldCI automates |
+| **KubeForge** | Secure Kubernetes runtime — plugged in as the CD target of this pipeline |
+| **DevSecOps Reference Pipeline** | Full chain from commit to cluster, documented and justified |

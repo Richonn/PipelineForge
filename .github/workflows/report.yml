@@ -1,0 +1,34 @@
+name: Security Report
+
+on:
+  workflow_call:
+
+jobs:
+  summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write security summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## Security Scan Summary
+
+          | Scanner | Target | Blocking threshold |
+          |---|---|---|
+          | Gitleaks | Full git history | Any secret found |
+          | Semgrep | `apps/go-app` | Critical, High |
+          | CodeQL | Go source | Critical, High |
+          | Trivy SCA | `go.mod` dependencies | Critical, High |
+          | Trivy Image | Docker image (GHCR) | Critical, High |
+          | Checkov | Dockerfile | Non-blocking (report only) |
+
+          ### Severity policy
+          | Level | Action |
+          |---|---|
+          | 🔴 Critical | Blocks merge |
+          | 🟠 High | Blocks merge |
+          | 🟡 Medium | Warning only |
+          | ⚪ Low / Info | Ignored in CI |
+
+          > Full results available in the **[Security tab](../../security/code-scanning)** of this repository.
+          EOF
