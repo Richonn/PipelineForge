@@ -1,1 +1,20 @@
+# macOS
 .DS_Store
+
+# Go
+*.o
+*.a
+*.so
+vendor/
+apps/go-app/server
+
+# SARIF reports
+*.sarif
+
+# Coverage
+coverage.out
+
+# IDE
+.idea/
+.vscode/
+*.swp
