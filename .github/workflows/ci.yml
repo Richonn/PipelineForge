@@ -23,6 +23,7 @@ jobs:
       contents: read
       security-events: write
       actions: read
+      pull-requests: write
     uses: "./.github/workflows/security.yml"
     secrets: inherit
 
