@@ -4,7 +4,7 @@
 
 Ce document applique la méthode **STRIDE** à la chaîne CI/CD elle-même — pas à l'application qu'elle déploie. Une chaîne de production compromise est un vecteur d'attaque critique : elle a accès aux secrets, au registry, et au cluster de production.
 
-> *Source : le rapport CERT-Wavestone 2025 cite explicitement la compromission de la CI/CD comme vecteur d'élévation de privilèges, aux côtés de l'ADCS et des outils d'hypervision.*
+> *Source : le rapport CERT 2025 sur la cybersécurité cite explicitement la compromission de la CI/CD comme vecteur d'élévation de privilèges, aux côtés de l'ADCS et des outils d'hypervision.*
 
 ### Catégories STRIDE
 
@@ -22,7 +22,7 @@ Ce document applique la méthode **STRIDE** à la chaîne CI/CD elle-même — p
 ## Périmètre analysé
 
 ```
-[Poste développeur] → [GitHub repo] → [GitHub Actions runners] 
+[Poste développeur] → [GitHub repo] → [GitHub Actions runners]
 → [Container Registry] → [ArgoCD] → [Cluster K8s production]
 ```
 
