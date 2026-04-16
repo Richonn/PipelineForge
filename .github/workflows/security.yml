@@ -33,6 +33,20 @@ jobs:
         run: semgrep scan --sarif --output=semgrep-results.sarif --config=auto . || true
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+      - name: Fix SARIF severity levels
+        if: always()
+        run: |
+          python3 -c "
+          import json
+          with open('semgrep-results.sarif') as f:
+              sarif = json.load(f)
+          for run in sarif['runs']:
+              for result in run['results']:
+                  if 'level' not in result:
+                      result['level'] = 'error'
+          with open('semgrep-results.sarif', 'w') as f:
+              json.dump(sarif, f)
+          "
       - name: Upload SARIF artifact
         if: always()
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
