@@ -16,6 +16,8 @@ jobs:
 
   security:
     needs: build-and-tests
+    permissions:
+      security-events: write
     uses: "./.github/workflows/security.yml"
 
   docker:
