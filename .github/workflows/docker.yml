@@ -47,7 +47,7 @@ jobs:
           sarif_file: trivy-results.sarif
           category: trivy
       - name: Checkov Scan
-        uses: bridgecrewio/checkov-action@e4c19cf8cbdffcd4d0a02c86e1a3b1f42f53ce9a # v12
+        uses: bridgecrewio/checkov-action@de2bfaecd21d58ef232e0d2a3391c33c32c460d7 # v12.1347.0
         with:
           directory: apps/go-app
           framework: dockerfile
