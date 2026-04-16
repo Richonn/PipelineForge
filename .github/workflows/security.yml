@@ -30,7 +30,7 @@ jobs:
       - name: Install Semgrep
         run: pip install semgrep
       - name: Run Semgrep
-        run: semgrep scan --sarif --output=semgrep-results.sarif --config=auto apps/go-app || true
+        run: semgrep scan --sarif --output=semgrep-results.sarif --config=auto . || true
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
       - name: Upload SARIF
