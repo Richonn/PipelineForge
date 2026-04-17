@@ -4,6 +4,8 @@
 
 This repository models a secure, agile software delivery pipeline covering the full application lifecycle: from developer commit to production deployment. Each stage integrates automated security controls without blocking the agile delivery flow.
 
+**Scope of this repository**: stages 1 through 7 (local commit to container registry). The CD and runtime layers (ArgoCD, Kubernetes) are documented here as the target architecture and covered by [KubeForge](https://github.com/Richonn/KubeForge).
+
 ```mermaid
 flowchart TD
     DEV([Developer]) -->|git commit| HOOK
