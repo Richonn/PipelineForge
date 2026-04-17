@@ -10,6 +10,10 @@ updates:
     labels:
       - "dependencies"
       - "go"
+    ignore:
+      # Intentionally pinned — CVE demonstration target for Trivy SCA scanning
+      - dependency-name: "github.com/gin-gonic/gin"
+        versions: ["*"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
