@@ -148,7 +148,7 @@ The CI/CD chain itself is a critical attack surface: it has access to secrets, t
 - [x] **Phase 3** — Full CI/CD pipeline: Gitleaks, Semgrep, CodeQL, Trivy SCA, Trivy image scan, Checkov — findings in Security Tab
 - [x] **Phase 4** — Secrets management, SHA-pinned actions, least-privilege tokens
 - [x] **Phase 5** — State-of-the-art documentation (DEVSECOPS_REFERENCE.md, TOOL_CHOICES.md, THREAT_MODEL.md, SECURITY.md)
-- [ ] **Phase 6** — OWASP ZAP (requires staging environment), Dependabot, full review, public release
+- [ ] **Phase 6** — Full documentation review and public release
 
 ---
 
@@ -156,8 +156,8 @@ The CI/CD chain itself is a critical attack surface: it has access to secrets, t
 
 | Project | Role |
 |---|---|
-| [ShieldCI](https://github.com/Richonn/ShieldCI) | Automatically generates secure pipelines — PipelineForge is the manually documented reference version |
-| [KubeForge](https://github.com/Richonn/KubeForge) | Secure Kubernetes runtime — plugged in as the CD target of this pipeline |
+| [ShieldCI](https://github.com/Richonn/ShieldCI) | Automatically generates secure CI pipelines — PipelineForge is the manually documented reference version of what ShieldCI automates |
+| [KubeForge](https://github.com/Richonn/KubeForge) | Kubernetes runtime layer — covers what happens after the image is pushed: GitOps with ArgoCD, RBAC, Sealed Secrets, Trivy Operator, Prometheus + Grafana |
 
 Together, the three projects provide complete DevSecOps coverage from commit to cluster.
 

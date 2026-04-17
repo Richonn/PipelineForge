@@ -50,7 +50,7 @@ It targets both DevOps teams looking to secure their pipelines, and consultants 
 - [x] Configure blocking thresholds: Critical/High continue-on-error, findings reported
 - [x] Publish results to GitHub Security Tab (SARIF)
 - [x] Generate job summary on each run
-- [ ] Integrate OWASP ZAP (DAST — requires staging environment)
+- [ ] Integrate OWASP ZAP (DAST — requires staging environment, out of scope for this reference)
 
 ### Phase 4 — Secrets Management and Supply Chain
 - [x] GitHub Secrets for all sensitive values

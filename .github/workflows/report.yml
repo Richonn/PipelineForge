@@ -25,10 +25,10 @@ jobs:
           ### Severity policy
           | Level | Action |
           |---|---|
-          | 🔴 Critical | Blocks merge |
-          | 🟠 High | Blocks merge |
-          | 🟡 Medium | Warning only |
-          | ⚪ Low / Info | Ignored in CI |
+          | Critical | Blocks merge |
+          | High | Blocks merge |
+          | Medium | Warning only |
+          | Low / Info | Ignored in CI |
 
           > Full results available in the **[Security tab](../../security/code-scanning)** of this repository.
           EOF

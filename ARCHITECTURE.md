@@ -63,7 +63,7 @@ flowchart TD
 | Tool | Role | Trigger |
 |---|---|---|
 | Gitleaks | Detect secrets in code (API keys, tokens...) | `git commit` |
-| Linter (golangci-lint / flake8 / eslint) | Code quality per stack | `git commit` |
+| golangci-lint | Code quality | `git commit` |
 
 **Why locally?** Shift Left — block issues as early as possible. A secret caught before the push does not require credential rotation.
 
@@ -73,8 +73,8 @@ flowchart TD
 
 | Tool | Stacks | What it detects |
 |---|---|---|
-| Semgrep | Go, Python, Node.js | Injections, unsafe patterns, dangerous practices |
-| CodeQL | Go, JavaScript | Complex vulnerabilities, unsafe data flows |
+| Semgrep | Go | Injections, unsafe patterns, dangerous practices |
+| CodeQL | Go | Complex vulnerabilities, unsafe data flows |
 
 **Thresholds**: Critical and High block the merge. Medium generates a warning on the PR.
 
@@ -84,7 +84,7 @@ flowchart TD
 
 | Tool | What it analyzes | CVE database |
 |---|---|---|
-| Trivy (dependencies) | go.sum, requirements.txt, package-lock.json | NVD, OSV, GitHub Advisory |
+| Trivy (dependencies) | go.sum | NVD, OSV, GitHub Advisory |
 | Dependabot | Automated dependency updates | GitHub Advisory |
 
 **Thresholds**: CVE CVSS >= 7.0 (High) blocks the merge.
@@ -128,9 +128,9 @@ Stage 2 — Runtime  : minimal image (distroless or alpine)
 |---|---|---|
 | OWASP ZAP | Baseline scan | Ephemeral staging |
 
-DAST runs against a staging environment spun up temporarily during CI. It tests the running application (HTTP headers, XSS, basic injections).
+**Out of scope for this reference implementation.** DAST requires a running staging environment reachable by the CI runner. The integration pattern is documented here for reference — OWASP ZAP in baseline mode tests the running application for HTTP-level vulnerabilities (missing security headers, reflected XSS, open redirects, basic injection points).
 
-**Limitation**: the ZAP baseline scan is shallow — it covers the most common vulnerabilities, not a full pentest. It is a safety net, not a guarantee.
+**Limitation**: the ZAP baseline scan is shallow — it covers the most common vulnerabilities, not a full pentest. It is a safety net against regressions, not a guarantee of security.
 
 ---
 
@@ -177,6 +177,5 @@ Exceptions (confirmed false positives) are documented in `.semgrepignore` / `.tr
 
 | Project | Coverage |
 |---|---|
-| **ShieldCI** | Automated generation of secure CI pipelines — this project is the manually documented reference version of what ShieldCI automates |
-| **KubeForge** | Secure Kubernetes runtime — plugged in as the CD target of this pipeline |
-| **DevSecOps Reference Pipeline** | Full chain from commit to cluster, documented and justified |
+| **ShieldCI** | Automated generation of secure CI pipelines — PipelineForge is the manually documented reference version of what ShieldCI automates |
+| **KubeForge** | Kubernetes runtime layer — covers what happens after the image is pushed: GitOps with ArgoCD, RBAC, Sealed Secrets, Trivy Operator, Prometheus + Grafana |
