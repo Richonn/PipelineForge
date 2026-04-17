@@ -42,32 +42,33 @@ flowchart TD
             S5[5. Docker Build\nMulti-stage]
             S6[6. Image Scan\nTrivy image]
             S7[7. IaC Scan\nCheckov]
-            S8[8. DAST\nOWASP ZAP baseline]
-            S9[9. Security Report\nSARIF to GitHub Security Tab]
+            S8[8. Security Report\nSARIF to GitHub Security Tab]
 
-            S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9
+            S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8
         end
 
-        S9 -->|merge on pass| MAIN[Main branch]
+        S8 -->|merge on pass| MAIN[Main branch]
         MAIN --> REGISTRY[Container Registry\nGHCR]
     end
 
-    REGISTRY -->|GitOps pull| CD
+    REGISTRY -->|image tag bump| GITOPS[Config repo\nHelm values]
 
-    subgraph CD["CD — Deployment"]
-        ARGOCD[ArgoCD\nGitOps sync]
-        ARGOCD --> STAGING[Staging]
-        STAGING -->|manual approval| PROD[Production]
+    subgraph CD["CD — KubeForge"]
+        ARGOCD[ArgoCD\nauto-sync]
+        ARGOCD --> CLUSTER[Minikube cluster\nrolling update]
     end
+
+    GITOPS --> ARGOCD
 
     subgraph RUNTIME["Runtime — KubeForge"]
-        RBAC[RBAC\nleast privilege]
-        SEALED[Sealed Secrets\nencrypted at rest]
+        RBAC[RBAC\nper service account]
+        SEALED[Sealed Secrets\nencrypted in Git]
         TRIVY_OP[Trivy Operator\ncontinuous scanning]
         PROM[Prometheus + Grafana\nobservability]
+        NET[Calico\nNetworkPolicy deny-all]
     end
 
-    PROD --> RUNTIME
+    CLUSTER --> RUNTIME
 ```
 
 ---
