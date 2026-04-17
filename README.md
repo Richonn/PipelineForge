@@ -130,7 +130,7 @@ The CI/CD chain itself is a critical attack surface: it has access to secrets, t
 - [x] **Phase 3** — Full CI/CD pipeline: Gitleaks, Semgrep, CodeQL, Trivy SCA, Trivy image scan, Checkov — findings in Security Tab
 - [x] **Phase 4** — Secrets management, SHA-pinned actions, least-privilege tokens
 - [x] **Phase 5** — State-of-the-art documentation (DEVSECOPS_REFERENCE.md, TOOL_CHOICES.md, THREAT_MODEL.md, SECURITY.md)
-- [ ] **Phase 6** — Full documentation review and public release
+- [x] **Phase 6** — Full documentation review and public release
 
 ---
 
