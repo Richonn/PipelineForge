@@ -137,7 +137,7 @@ The CI/CD chain itself is a critical attack surface: it has access to secrets, t
 - Kubernetes cluster (runtime)
 - Supply chain (third-party dependencies)
 
-> References: Codecov incident 2021, tj-actions incident 2025, CERT-Wavestone report 2025.
+> References: Codecov incident 2021, tj-actions incident 2025, CERT report 2025.
 
 ---
 
