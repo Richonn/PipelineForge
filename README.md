@@ -68,10 +68,8 @@ flowchart TD
 | CI — Build | Docker multi-stage | Minimal runtime image (distroless/alpine) — reduced attack surface |
 | CI — Image | Trivy | CVE in Docker image (OS, packages, layers) |
 | CI — IaC | Checkov | Misconfigurations in Dockerfiles and K8s manifests |
-| CI — DAST | OWASP ZAP | Baseline scan on ephemeral staging environment |
 | CI — Report | SARIF | Results published to GitHub Security Tab |
-| CD | ArgoCD | GitOps sync — cluster state mirrors Git state |
-| Runtime | KubeForge | RBAC, Sealed Secrets, Trivy Operator, Prometheus + Grafana |
+
 
 ### Blocking Thresholds
 
