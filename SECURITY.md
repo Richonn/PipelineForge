@@ -27,6 +27,12 @@ The CI/CD infrastructure itself follows security best practices:
 - Docker images are built using multi-stage builds with minimal runtime layers
 - Branch protection is enforced on `main`
 
+## Known Tool Limitations
+
+### Semgrep
+
+Semgrep findings are visible in the CI job logs but do not appear in the GitHub Security Tab. This is a known integration limitation: Semgrep's SARIF output does not include a `level` field on individual results, which GitHub Code Scanning requires to create alerts. The tool itself functions correctly — 4 findings are detected on every run (SQL injection, OS command injection, hardcoded secret, missing Dockerfile user). A Semgrep Cloud account with `SEMGREP_APP_TOKEN` would resolve this by routing results through Semgrep's own platform.
+
 ## Reporting a Vulnerability
 
 If you discover a genuine security issue in the **pipeline infrastructure** (workflows, Dockerfile patterns, CI configuration), please report it responsibly:
