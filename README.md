@@ -50,25 +50,6 @@ flowchart TD
         S8 -->|merge on pass| MAIN[Main branch]
         MAIN --> REGISTRY[Container Registry\nGHCR]
     end
-
-    REGISTRY -->|image tag bump| GITOPS[Config repo\nHelm values]
-
-    subgraph CD["CD — KubeForge"]
-        ARGOCD[ArgoCD\nauto-sync]
-        ARGOCD --> CLUSTER[Minikube cluster\nrolling update]
-    end
-
-    GITOPS --> ARGOCD
-
-    subgraph RUNTIME["Runtime — KubeForge"]
-        RBAC[RBAC\nper service account]
-        SEALED[Sealed Secrets\nencrypted in Git]
-        TRIVY_OP[Trivy Operator\ncontinuous scanning]
-        PROM[Prometheus + Grafana\nobservability]
-        NET[Calico\nNetworkPolicy deny-all]
-    end
-
-    CLUSTER --> RUNTIME
 ```
 
 ---
