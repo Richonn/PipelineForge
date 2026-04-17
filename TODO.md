@@ -4,7 +4,7 @@
 
 **DevSecOps Reference Pipeline** is an open-source GitHub repository modeling a secure, agile software delivery pipeline from end to end. This is not just a CI/CD pipeline: it is a **documented, justified, and reproducible reference deliverable** — designed as a state-of-the-art example that any team can study, adapt, or deploy.
 
-The project covers three application stacks (Go, Python, Node.js) and integrates security controls at every stage of the software lifecycle: from commit to production deployment. Every tool choice is documented and justified against the risks it addresses.
+The project covers a Go application stack and integrates security controls at every stage of the software lifecycle: from commit to production deployment. Every tool choice is documented and justified against the risks it addresses.
 
 It targets both DevOps teams looking to secure their pipelines, and consultants or architects seeking a concrete, well-argued reference.
 
@@ -12,7 +12,7 @@ It targets both DevOps teams looking to secure their pipelines, and consultants 
 
 ## Tech Stack
 
-- **CI/CD**: GitHub Actions
+- **CI/CD**: GitHub Actions (reusable workflows)
 - **Containerization**: Docker, multi-stage builds
 - **Orchestration**: Kubernetes (optional, via KubeForge)
 - **SAST**: Semgrep + CodeQL
@@ -20,62 +20,53 @@ It targets both DevOps teams looking to secure their pipelines, and consultants 
 - **SCA / CVE**: Trivy (images + dependencies)
 - **DAST**: OWASP ZAP (smoke test on staging environment)
 - **IaC scanning**: Checkov (Dockerfile, K8s manifests)
-- **Threat modeling**: structured THREAT_MODEL.md (STRIDE)
-- **Reporting**: GitHub Security Tab + automated summaries on PRs
+- **Threat modeling**: THREAT_MODEL.md (STRIDE)
+- **Reporting**: GitHub Security Tab (SARIF) + job summaries
 
 ---
 
 ## TODO
 
 ### Phase 1 — Repository Foundations
-- [ ] Create repository structure with main README
-- [ ] Write `ARCHITECTURE.md`: full pipeline diagram (Mermaid)
-- [ ] Write `THREAT_MODEL.md`: threat modeling of the CI/CD chain itself (STRIDE)
-  - What risks on GitHub Actions?
-  - What risks on the Docker registry?
-  - What risks around secrets in CI?
-  - What risks related to third-party dependencies?
-- [ ] Write `TOOL_CHOICES.md`: justification of each selected tool vs. alternatives (e.g. why Semgrep over SonarQube?)
+- [x] Create repository structure with main README
+- [x] Write `ARCHITECTURE.md`: full pipeline diagram (Mermaid)
+- [x] Write `THREAT_MODEL.md`: threat modeling of the CI/CD chain itself (STRIDE)
+- [x] Write `TOOL_CHOICES.md`: justification of each selected tool vs. alternatives
 
-### Phase 2 — Demo Applications
-- [ ] Create a minimal Go app (simple REST API)
-- [ ] Create a minimal Python app (Flask or FastAPI)
-- [ ] Create a minimal Node.js app (Express)
-- [ ] Each app must intentionally contain fixable vulnerabilities to demonstrate the scans
+### Phase 2 — Demo Application
+- [x] Create a minimal Go app (REST API)
+- [x] Intentional vulnerabilities: SQL injection, OS command injection, hardcoded secret, outdated dependency
+- [ ] Create a minimal Python app (FastAPI) — optional
+- [ ] Create a minimal Node.js app (Express) — optional
 
 ### Phase 3 — Secure CI/CD Pipeline
-- [ ] Base pipeline: lint, build, unit tests
-- [ ] Integrate Gitleaks as pre-commit hook (local) + CI stage
-- [ ] Integrate Semgrep (SAST) for all three stacks
-- [ ] Integrate CodeQL for Go and JavaScript
-- [ ] Integrate Trivy for Docker image and dependency scanning
-- [ ] Integrate Checkov for Dockerfiles and K8s manifests
-- [ ] Integrate OWASP ZAP in baseline mode on a staging environment (DAST)
-- [ ] Configure blocking thresholds: Critical/High block merge, Medium warns
-- [ ] Publish results to GitHub Security Tab (SARIF)
-- [ ] Generate an automated security summary on each PR
+- [x] Base pipeline: build + unit tests
+- [x] Integrate Gitleaks (secrets scan)
+- [x] Integrate Semgrep (SAST — findings in CI logs)
+- [x] Integrate CodeQL (SAST — data flow analysis, findings in Security Tab)
+- [x] Integrate Trivy SCA (dependency CVE scan, findings in Security Tab)
+- [x] Integrate Trivy image scan (Docker image CVE scan)
+- [x] Integrate Checkov (Dockerfile IaC scan)
+- [x] Configure blocking thresholds: Critical/High continue-on-error, findings reported
+- [x] Publish results to GitHub Security Tab (SARIF)
+- [x] Generate job summary on each run
+- [ ] Integrate OWASP ZAP (DAST — requires staging environment)
 
 ### Phase 4 — Secrets Management and Supply Chain
-- [ ] Set up secrets management via GitHub Secrets + document best practices
-- [ ] Pin GitHub Actions by SHA (`uses: actions/checkout@SHA` instead of `@v3`)
+- [x] GitHub Secrets for all sensitive values
+- [x] All GitHub Actions pinned by commit SHA
 - [ ] Enable Dependabot for automated dependency updates
-- [ ] Document supply chain risks in `THREAT_MODEL.md` (link to CERT-Wavestone 2025 report: 500+ compromised npm packages)
+- [x] Supply chain risks documented in `THREAT_MODEL.md`
 
 ### Phase 5 — State-of-the-Art Documentation
-- [ ] Write `DEVSECOPS_REFERENCE.md`: full pipeline guide
-  - Shift Left: definition and practical implementation
-  - SAST vs DAST vs SCA: when to use which
-  - False positive management: strategy and configuration
-  - Agile pipeline vs secure pipeline: how to reconcile both
-- [ ] Add badges to README (pipeline status, Trivy, Semgrep, license)
-- [ ] Create a visual diagram of the full chain (Mermaid in README)
-- [ ] Write a blog post or LinkedIn article at publication (optional)
+- [x] Write `DEVSECOPS_REFERENCE.md`: Shift Left, SAST/DAST/SCA, false positives, supply chain
+- [x] Write `TOOL_CHOICES.md`: tool justification vs alternatives
+- [x] Write `SECURITY.md`: known limitations and vulnerability reporting policy
+- [ ] Add CI pipeline status badge to README
 
 ### Phase 6 — Polish & Publication
-- [ ] Verify each tool is properly configured, not just present
-- [ ] Ensure the pipeline runs without errors on all three apps
+- [x] Repository is public on GitHub
 - [ ] Full documentation review
-- [ ] Publish the repository publicly on GitHub (Richonn account)
 - [ ] Submit to r/devops and r/netsec for feedback
 
 ---
@@ -85,16 +76,17 @@ It targets both DevOps teams looking to secure their pipelines, and consultants 
 | Skill | Evidence |
 |---|---|
 | Knowledge of CI/CD tools and their risks | `THREAT_MODEL.md` + `TOOL_CHOICES.md` |
-| Integration of security tools in a delivery chain | Functional GitHub Actions pipeline |
-| State-of-the-art pipeline representation | `ARCHITECTURE.md` + `DEVSECOPS_REFERENCE.md` |
-| Concrete working implementation | All three apps + running pipeline |
-| Organizational dimension | Process documentation and best practices |
+| Integration of security tools in a delivery chain | Functional GitHub Actions pipeline (4 reusable workflows) |
+| State-of-the-art pipeline design | `ARCHITECTURE.md` + `DEVSECOPS_REFERENCE.md` |
+| Concrete working implementation | Go app + pipeline with active findings in Security Tab |
+| Supply chain hardening | SHA-pinned actions, least-privilege tokens, locked dependencies |
+| Organizational dimension | False positive policy, exception management, severity thresholds |
 
 ---
 
 ## Related Projects
 
-- **ShieldCI** → generates pipelines; this project is the "manual reference" version of what ShieldCI automates
-- **KubeForge** → covers runtime/CD; this project covers CI and the build phase
+- **ShieldCI** — generates pipelines automatically; PipelineForge is the manually documented reference version
+- **KubeForge** — covers Kubernetes runtime security; PipelineForge covers CI and the build phase
 
 Together, the three projects provide complete DevSecOps coverage from commit to cluster.

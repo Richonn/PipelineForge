@@ -2,10 +2,11 @@
 
 > A DevSecOps reference pipeline — from commit to cluster, secured at every stage.
 
+![CI](https://github.com/Richonn/PipelineForge/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/github/license/Richonn/PipelineForge)
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
 ![Threat Model](https://img.shields.io/badge/threat%20model-STRIDE-blueviolet)
-![Stacks](https://img.shields.io/badge/stacks-Go%20%7C%20Python%20%7C%20Node.js-blue)
+![Stack](https://img.shields.io/badge/stack-Go-blue)
 
 ---
 
@@ -76,11 +77,11 @@ flowchart TD
 | Stage | Tool | Role |
 |---|---|---|
 | Pre-commit | Gitleaks | Secret detection before push |
-| Pre-commit | golangci-lint / flake8 / eslint | Code quality per stack |
-| CI — SAST | Semgrep | Dangerous pattern detection (Go, Python, Node.js) |
-| CI — SAST | CodeQL | Data flow analysis (Go, JavaScript) |
+| Pre-commit | golangci-lint | Code quality |
+| CI — SAST | Semgrep | Dangerous pattern detection |
+| CI — SAST | CodeQL | Data flow analysis |
 | CI — Secrets | Gitleaks | Independent re-scan from local hook |
-| CI — SCA | Trivy | CVE in dependencies (go.sum, requirements.txt, package-lock.json) |
+| CI — SCA | Trivy | CVE in dependencies (go.sum) |
 | CI — SCA | Dependabot | Automated dependency updates |
 | CI — Build | Docker multi-stage | Minimal runtime image (distroless/alpine) — reduced attack surface |
 | CI — Image | Trivy | CVE in Docker image (OS, packages, layers) |
@@ -111,9 +112,7 @@ PipelineForge/
 ├── DEVSECOPS_REFERENCE.md   # Full guide: Shift Left, SAST/DAST/SCA, false positives
 │
 ├── apps/
-│   ├── go-app/              # Go REST API — intentional vulnerabilities for demo
-│   ├── python-app/          # Python API (FastAPI)
-│   └── node-app/            # Node.js API (Express)
+│   └── go-app/              # Go REST API — intentional vulnerabilities for demo
 │
 └── .github/
     └── workflows/
@@ -145,11 +144,11 @@ The CI/CD chain itself is a critical attack surface: it has access to secrets, t
 ## Roadmap
 
 - [x] **Phase 1** — Foundations: architecture, threat model, roadmap
-- [ ] **Phase 2** — Demo applications (Go, Python, Node.js) with intentional vulnerabilities
-- [ ] **Phase 3** — Full CI/CD pipeline with all security scanning tools
-- [ ] **Phase 4** — Secrets management, SHA pinning, Dependabot
-- [ ] **Phase 5** — State-of-the-art documentation (DEVSECOPS_REFERENCE.md, TOOL_CHOICES.md)
-- [ ] **Phase 6** — Polish and public release
+- [x] **Phase 2** — Demo Go application with intentional vulnerabilities (SQL injection, command injection, hardcoded secret, outdated dependency)
+- [x] **Phase 3** — Full CI/CD pipeline: Gitleaks, Semgrep, CodeQL, Trivy SCA, Trivy image scan, Checkov — findings in Security Tab
+- [x] **Phase 4** — Secrets management, SHA-pinned actions, least-privilege tokens
+- [x] **Phase 5** — State-of-the-art documentation (DEVSECOPS_REFERENCE.md, TOOL_CHOICES.md, THREAT_MODEL.md, SECURITY.md)
+- [ ] **Phase 6** — OWASP ZAP (requires staging environment), Dependabot, full review, public release
 
 ---
 
