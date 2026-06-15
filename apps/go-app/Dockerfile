@@ -10,7 +10,7 @@ COPY . .
 RUN go build -o server .
 
 
-FROM alpine:3.18
+FROM alpine:3.24
 
 WORKDIR /app
 
